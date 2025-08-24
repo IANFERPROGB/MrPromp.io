@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MrPromp - Mejora tus prompts con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0a0a',
+                        'dark-card': '#1a1a1a',
+                        'purple-glow': '#8b5cf6',
+                        'blue-glow': '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen overflow-x-hidden transition-all duration-500">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-magic text-white text-sm"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                    MrPromp
+                </h1>
+            </div>
+            
+            <!-- Header Actions -->
+            <div class="flex items-center space-x-3">
+                <button id="themeToggle" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 flex items-center justify-center transition-all duration-300">
+                    <i class="fas fa-moon text-gray-700 dark:text-yellow-400 text-sm"></i>
+                </button>
+                <button id="historyBtn" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 flex items-center justify-center transition-all duration-300">
+                    <i class="fas fa-history text-gray-700 dark:text-gray-300 text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex flex-col items-center justify-center min-h-screen pt-20 pb-10 px-6">
+        <!-- Central AI Avatar -->
+        <div class="mb-12 relative">
+            <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-purple-600 flex items-center justify-center shadow-2xl relative overflow-hidden">
+                <!-- Animated background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-400/20 via-blue-400/20 to-purple-500/20 animate-pulse"></div>
+                
+                <!-- AI Icon -->
+                <div class="relative z-10 w-16 h-10 md:w-20 md:h-12 bg-black rounded-lg flex items-center justify-center">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                        <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                        <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                    </div>
+                </div>
+                
+                <!-- Glow effect -->
+                <div class="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 blur-xl opacity-30 scale-110"></div>
+            </div>
+        </div>
+
+        <!-- Main Input Container -->
+        <div class="w-full max-w-2xl">
+            <!-- Input Section -->
+            <div class="relative mb-6">
+                <div class="flex items-center bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-700 rounded-2xl overflow-hidden shadow-2xl">
+                    <textarea 
+                        id="originalPrompt" 
+                        rows="1"
+                        class="flex-1 px-6 py-4 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-none outline-none resize-none text-lg"
+                        placeholder="¿Cuál es tu pregunta?"
+                        style="min-height: 60px; max-height: 200px;"
+                    ></textarea>
+                    <button 
+                        id="improveBtn" 
+                        class="mx-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                        <span id="btnText">Preguntar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Action -->
+            <div class="text-center mb-8">
+                <button class="inline-flex items-center px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-sparkles mr-2"></i>
+                    Modo Creativo
+                </button>
+            </div>
+
+            <!-- Dynamic Form Container -->
+            <div id="dynamicForm" class="hidden mb-6 p-6 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-700 rounded-2xl">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-form text-purple-400 mr-2"></i>
+                    Información adicional requerida
+                </h3>
+                <div id="formFields"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden w-full max-w-4xl mt-8 transform transition-all duration-500">
+            <div class="bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-700 rounded-2xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full mb-4">
+                        <i class="fas fa-sparkles text-purple-400 mr-2"></i>
+                        <span class="text-purple-300 font-medium">Prompt Mejorado</span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Original -->
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <h4 class="font-medium text-gray-600 dark:text-gray-400 text-sm uppercase tracking-wide">Original</h4>
+                        </div>
+                        <div id="originalDisplay" class="p-6 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-800 dark:text-gray-300 min-h-[150px] leading-relaxed"></div>
+                    </div>
+                    
+                    <!-- Improved -->
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="w-2 h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></div>
+                            <h4 class="font-medium text-transparent bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-sm uppercase tracking-wide">Mejorado</h4>
+                        </div>
+                        <div id="improvedDisplay" class="p-6 bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl text-gray-900 dark:text-white min-h-[150px] leading-relaxed"></div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4 mt-8">
+                    <button id="copyBtn" class="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-copy mr-2"></i>
+                        Copiar
+                    </button>
+                    <button id="saveBtn" class="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-bookmark mr-2"></i>
+                        Guardar
+                    </button>
+                    <button id="newPromptBtn" class="flex items-center px-6 py-3 bg-gray-500 dark:bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-plus mr-2"></i>
+                        Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Panel -->
+        <div id="historyPanel" class="hidden fixed inset-0 z-50 bg-black/80 dark:bg-black/80 bg-white/80 backdrop-blur-sm">
+            <div class="flex items-center justify-center min-h-screen p-6">
+                <div class="bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+                    <div class="flex justify-between items-center p-6 border-b border-gray-300 dark:border-gray-700">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-history text-purple-400 mr-3"></i>
+                            Historial de Prompts
+                        </h3>
+                        <button id="closeHistoryBtn" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 flex items-center justify-center transition-all duration-300">
+                            <i class="fas fa-times text-gray-600 dark:text-gray-400"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div id="historyList" class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+                            <!-- History items will be populated here -->
+                        </div>
+                        
+                        <div id="emptyHistory" class="text-center py-16 text-gray-500 dark:text-gray-500">
+                            <div class="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-inbox text-2xl text-gray-400 dark:text-gray-600"></i>
+                            </div>
+                            <p class="text-lg">No hay prompts guardados aún</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-600 mt-2">Tus conversaciones aparecerán aquí</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/80 dark:bg-black/80 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-700 rounded-2xl p-8 text-center shadow-2xl transform transition-all duration-300">
+            <div class="relative mb-6">
+                <div class="w-16 h-16 border-4 border-gray-300 dark:border-gray-700 border-t-purple-500 rounded-full animate-spin mx-auto"></div>
+                <div class="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-blue-500 rounded-full animate-spin mx-auto" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            </div>
+            <p class="text-gray-900 dark:text-white font-medium text-lg mb-2">Mejorando tu prompt</p>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Esto puede tomar unos segundos...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
